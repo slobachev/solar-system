@@ -1,6 +1,10 @@
 #include <string>
 #include <algorithm>
 #include <vector>
+#include <map>
+#include <iostream>
+#include <stdio.h>
+#include <stdlib.h>
 // GLEW
 #define GLEW_STATIC
 #include <GL/glew.h>
@@ -22,13 +26,14 @@
 #include <SOIL/SOIL.h>
 
 // Properties
-GLuint screenWidth = 1200, screenHeight = 800;
+GLuint screenWidth = 1600, screenHeight = 900;
 
 // Function prototypes
 void key_callback(GLFWwindow* window, int key, int scancode, int action, int mode);
 void scroll_callback(GLFWwindow* window, double xoffset, double yoffset);
 void mouse_callback(GLFWwindow* window, double xpos, double ypos);
 void Do_Movement();
+void showText(GLuint texture, GLuint VAO, Shader* textShader);
 GLuint loadCubemap(vector<const GLchar*> faces);
 
 // Camer
@@ -68,9 +73,73 @@ int main()
     // Define the viewport dimensions
     glViewport(0, 0, screenWidth, screenHeight);
 
+	// Build and compile our shader program
+	Shader textShader("C:/Users/user/Documents/Visual Studio 2015/Projects/SecondSemester/Cubemap/shaders/textVertex.vs", "C:/Users/user/Documents/Visual Studio 2015/Projects/SecondSemester/Cubemap/shaders/textFragment.fs");
+
+
+	// Set up vertex data (and buffer(s)) and attribute pointers
+	GLfloat vertices[] = {
+		// Positions          // Colors           // Texture Coords
+		1.0f,  1.0f, 0.0f,   1.0f, 0.0f, 0.0f,   1.0f, 1.0f, // Top Right
+		1.0f, 0.4f, 0.0f,   0.0f, 1.0f, 0.0f,   1.0f, 0.0f, // Bottom Right
+		0.4f, 0.4f, 0.0f,   0.0f, 0.0f, 1.0f,   0.0f, 0.0f, // Bottom Left
+		0.4f,  1.0f, 0.0f,   1.0f, 1.0f, 0.0f,   0.0f, 1.0f  // Top Left 
+	};
+	GLuint indices[] = {  // Note that we start from 0!
+		0, 1, 3, // First Triangle
+		1, 2, 3  // Second Triangle
+	};
+	GLuint VBO, VAO, EBO;
+	glGenVertexArrays(1, &VAO);
+	glGenBuffers(1, &VBO);
+	glGenBuffers(1, &EBO);
+
+	glBindVertexArray(VAO);
+
+	glBindBuffer(GL_ARRAY_BUFFER, VBO);
+	glBufferData(GL_ARRAY_BUFFER, sizeof(vertices), vertices, GL_STATIC_DRAW);
+
+	glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, EBO);
+	glBufferData(GL_ELEMENT_ARRAY_BUFFER, sizeof(indices), indices, GL_STATIC_DRAW);
+
+	// Position attribute
+	glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, 8 * sizeof(GLfloat), (GLvoid*)0);
+	glEnableVertexAttribArray(0);
+	// Color attribute
+	glVertexAttribPointer(1, 3, GL_FLOAT, GL_FALSE, 8 * sizeof(GLfloat), (GLvoid*)(3 * sizeof(GLfloat)));
+	glEnableVertexAttribArray(1);
+	// TexCoord attribute
+	glVertexAttribPointer(2, 2, GL_FLOAT, GL_FALSE, 8 * sizeof(GLfloat), (GLvoid*)(6 * sizeof(GLfloat)));
+	glEnableVertexAttribArray(2);
+
+	glBindVertexArray(0); // Unbind VAO
+
+
+						  // Load and create a texture 
+	GLuint texture;
+	glGenTextures(1, &texture);
+	glBindTexture(GL_TEXTURE_2D, texture); // All upcoming GL_TEXTURE_2D operations now have effect on this texture object
+										   // Set the texture wrapping parameters
+	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_REPEAT);	// Set texture wrapping to GL_REPEAT (usually basic wrapping method)
+	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_REPEAT);
+	// Set texture filtering parameters
+	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
+	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
+	// Load image, create texture and generate mipmaps
+	int width, height;
+	unsigned char* image = SOIL_load_image("C:/Users/user/Documents/Visual Studio 2015/Projects/SecondSemester/Cubemap/resources/textures/textEarth.jpg", &width, &height, 0, SOIL_LOAD_RGB);
+	glTexImage2D(GL_TEXTURE_2D, 0, GL_RGB, width, height, 0, GL_RGB, GL_UNSIGNED_BYTE, image);
+	glGenerateMipmap(GL_TEXTURE_2D);
+	SOIL_free_image_data(image);
+	glBindTexture(GL_TEXTURE_2D, 0); // Unbind texture when done, so we won't accidentily mess up our texture.
+
+
+
 	// Setup some OpenGL options
 	glEnable(GL_DEPTH_TEST);
 	glDepthFunc(GL_LESS);
+	// Set OpenGL options
+
 
     // Setup and compile our shaders
     Shader shader("C:/Users/user/Documents/Visual Studio 2015/Projects/SecondSemester/Cubemap/shaders/vertex.vs", "C:/Users/user/Documents/Visual Studio 2015/Projects/SecondSemester/Cubemap/shaders/fragment.fs");
@@ -142,14 +211,14 @@ int main()
 	glBindVertexArray(0);
 
 	// Cubemap
-	/*vector<const GLchar*> faces;
+	vector<const GLchar*> faces;
 	faces.push_back("C:/Users/user/Documents/Visual Studio 2015/Projects/SecondSemester/Cubemap/resources/textures/skybox/right.jpg");
 	faces.push_back("C:/Users/user/Documents/Visual Studio 2015/Projects/SecondSemester/Cubemap/resources/textures/skybox/left.jpg");
 	faces.push_back("C:/Users/user/Documents/Visual Studio 2015/Projects/SecondSemester/Cubemap/resources/textures/skybox/top.jpg");
 	faces.push_back("C:/Users/user/Documents/Visual Studio 2015/Projects/SecondSemester/Cubemap/resources/textures/skybox/bottom.jpg");
 	faces.push_back("C:/Users/user/Documents/Visual Studio 2015/Projects/SecondSemester/Cubemap/resources/textures/skybox/back.jpg");
 	faces.push_back("C:/Users/user/Documents/Visual Studio 2015/Projects/SecondSemester/Cubemap/resources/textures/skybox/front.jpg");
-	GLuint cubemapTexture = loadCubemap(faces);*/
+	GLuint cubemapTexture = loadCubemap(faces);
 
     // Game loop
     while(!glfwWindowShouldClose(window))
@@ -162,10 +231,12 @@ int main()
         // Check and call events
         glfwPollEvents();
         Do_Movement();
-
+		
         // Clear the colorbuffer
         glClearColor(0.05f, 0.05f, 0.05f, 1.0f);
         glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
+
+		showText(texture, VAO, &textShader);
 
         shader.use();   // <-- Don't forget this one!
         // Transformation matrices
@@ -173,6 +244,7 @@ int main()
         glm::mat4 view = camera.GetViewMatrix();
         glUniformMatrix4fv(glGetUniformLocation(shader.Program, "projection"), 1, GL_FALSE, glm::value_ptr(projection));
         glUniformMatrix4fv(glGetUniformLocation(shader.Program, "view"), 1, GL_FALSE, glm::value_ptr(view));
+
 
         // Draw the loaded model
         glm::mat4 model1, model2, model3, model4, model5, model6, model7, model8, model9;
@@ -220,25 +292,31 @@ int main()
 		//model9 = glm::scale(model9, glm::vec3(0.05f, 0.05f, 0.05f));	// It's a bit too big for our scene, so scale it down
 		//glUniformMatrix4fv(glGetUniformLocation(shader.Program, "model"), 1, GL_FALSE, glm::value_ptr(model9));
 		//jupiter_model.Draw(shader);
-
 		// Draw skybox as lasl
+		// Bind Texture
+		
 		glDepthFunc(GL_LEQUAL);  // Change depth function so depth test passes when values are equal to depth buffer's content
 		skyboxShader.use();
 		view = glm::mat4(glm::mat3(camera.GetViewMatrix()));	// Remove any translation component of the view matrix
 		glUniformMatrix4fv(glGetUniformLocation(skyboxShader.Program, "view"), 1, GL_FALSE, glm::value_ptr(view));
 		glUniformMatrix4fv(glGetUniformLocation(skyboxShader.Program, "projection"), 1, GL_FALSE, glm::value_ptr(projection));
+
 		// skybox cube
-		/*glBindVertexArray(skyboxVAO);
+		glBindVertexArray(skyboxVAO);
 		glActiveTexture(GL_TEXTURE0);
 		glUniform1i(glGetUniformLocation(shader.Program, "skybox"), 0);
 		glBindTexture(GL_TEXTURE_CUBE_MAP, cubemapTexture);
-		glDrawArrays(GL_TRIANGLES, 0, 36);*/
+		glDrawArrays(GL_TRIANGLES, 0, 36);
 		glBindVertexArray(0);
 		glDepthFunc(GL_LESS); // Set depth function back to default
+
 
         // Swap the buffers
         glfwSwapBuffers(window);
     }
+	glDeleteVertexArrays(1, &VAO);
+	glDeleteBuffers(1, &VBO);
+	glDeleteBuffers(1, &EBO);
 
     glfwTerminate();
     return 0;
@@ -276,6 +354,21 @@ GLuint loadCubemap(vector<const GLchar*> faces)
 	return textureID;
 }
 
+void showText(GLuint texture, GLuint VAO, Shader* textShader)
+{
+	if (keys[GLFW_KEY_Q])
+	{
+		glBindTexture(GL_TEXTURE_2D, texture);
+
+		// Activate shader
+		textShader->use();
+
+		// Draw container
+		glBindVertexArray(VAO);
+		glDrawElements(GL_TRIANGLES, 6, GL_UNSIGNED_INT, 0);
+		glBindVertexArray(0);
+	}
+}
 // Moves/alters the camera positions based on user input
 void Do_Movement()
 {
