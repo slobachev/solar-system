@@ -74,7 +74,8 @@ int main()
     glViewport(0, 0, screenWidth, screenHeight);
 
 	// Build and compile our shader program
-	Shader textShader("C:/Users/user/Documents/Visual Studio 2015/Projects/SecondSemester/Cubemap/shaders/textVertex.vs", "C:/Users/user/Documents/Visual Studio 2015/Projects/SecondSemester/Cubemap/shaders/textFragment.fs");
+	Shader textShader(	"C:/Users/user/Documents/Visual Studio 2015/Projects/SecondSemester/Cubemap/shaders/textVertex.vs",
+						"C:/Users/user/Documents/Visual Studio 2015/Projects/SecondSemester/Cubemap/shaders/textFragment.fs");
 
 
 	// Set up vertex data (and buffer(s)) and attribute pointers
@@ -115,24 +116,36 @@ int main()
 	glBindVertexArray(0); // Unbind VAO
 
 
-						  // Load and create a texture 
-	GLuint texture;
-	glGenTextures(1, &texture);
-	glBindTexture(GL_TEXTURE_2D, texture); // All upcoming GL_TEXTURE_2D operations now have effect on this texture object
-										   // Set the texture wrapping parameters
-	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_REPEAT);	// Set texture wrapping to GL_REPEAT (usually basic wrapping method)
-	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_REPEAT);
-	// Set texture filtering parameters
-	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
-	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
-	// Load image, create texture and generate mipmaps
-	int width, height;
-	unsigned char* image = SOIL_load_image("C:/Users/user/Documents/Visual Studio 2015/Projects/SecondSemester/Cubemap/resources/textures/textEarth.jpg", &width, &height, 0, SOIL_LOAD_RGB);
-	glTexImage2D(GL_TEXTURE_2D, 0, GL_RGB, width, height, 0, GL_RGB, GL_UNSIGNED_BYTE, image);
-	glGenerateMipmap(GL_TEXTURE_2D);
-	SOIL_free_image_data(image);
-	glBindTexture(GL_TEXTURE_2D, 0); // Unbind texture when done, so we won't accidentily mess up our texture.
-
+	// Load and create a texture
+	string texturesPath = "C:/Users/user/Documents/Visual Studio 2015/Projects/SecondSemester/Cubemap/resources/textures/";
+	vector<string> fileNamesOfPlanets {"textSun.jpg", 
+										"textEarth.jpg", 
+										"textMercury.jpg", 
+										"textMars.jpg", 
+										"textVenus.jpg", 
+										"textJupiter.jpg", 
+										"textSaturn.jpg", 
+										"textNeptun.jpg", 
+										"textUran.jpg"};
+	vector<GLuint> textTextures(9);
+	for (int i = 0; i < 9; i++)
+	{
+		glGenTextures(1, &textTextures[i]);
+		glBindTexture(GL_TEXTURE_2D, textTextures[i]); // All upcoming GL_TEXTURE_2D operations now have effect on this texture object
+											// Set the texture wrapping parameters
+		glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_REPEAT);	// Set texture wrapping to GL_REPEAT (usually basic wrapping method)
+		glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_REPEAT);
+		// Set texture filtering parameters
+		glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
+		glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
+		// Load image, create texture and generate mipmaps
+		int width, height;
+		unsigned char* image = SOIL_load_image((texturesPath + fileNamesOfPlanets[i]).c_str(), &width, &height, 0, SOIL_LOAD_RGB);
+		glTexImage2D(GL_TEXTURE_2D, 0, GL_RGB, width, height, 0, GL_RGB, GL_UNSIGNED_BYTE, image);
+		glGenerateMipmap(GL_TEXTURE_2D);
+		SOIL_free_image_data(image);
+		glBindTexture(GL_TEXTURE_2D, 0); // Unbind texture when done, so we won't accidentily mess up our texture.
+	}
 
 
 	// Setup some OpenGL options
@@ -142,8 +155,11 @@ int main()
 
 
     // Setup and compile our shaders
-    Shader shader("C:/Users/user/Documents/Visual Studio 2015/Projects/SecondSemester/Cubemap/shaders/vertex.vs", "C:/Users/user/Documents/Visual Studio 2015/Projects/SecondSemester/Cubemap/shaders/fragment.fs");
-	Shader skyboxShader("C:/Users/user/Documents/Visual Studio 2015/Projects/SecondSemester/Cubemap/shaders/cubemap.vs", "C:/Users/user/Documents/Visual Studio 2015/Projects/SecondSemester/Cubemap/shaders/cubemap.fs");
+    Shader shader(	"C:/Users/user/Documents/Visual Studio 2015/Projects/SecondSemester/Cubemap/shaders/vertex.vs", 
+					"C:/Users/user/Documents/Visual Studio 2015/Projects/SecondSemester/Cubemap/shaders/fragment.fs");
+	Shader skyboxShader("C:/Users/user/Documents/Visual Studio 2015/Projects/SecondSemester/Cubemap/shaders/cubemap.vs", 
+						"C:/Users/user/Documents/Visual Studio 2015/Projects/SecondSemester/Cubemap/shaders/cubemap.fs");
+
     // Load models
 	/*Model sun_model("C:/Users/user/Documents/Visual Studio 2015/Projects/SecondSemester/Cubemap/resources/objects/Sun/sun2.obj");
 	Model mercury_model("C:/Users/user/Documents/Visual Studio 2015/Projects/SecondSemester/Cubemap/resources/objects/mercury/mercury.obj");
@@ -354,11 +370,19 @@ GLuint loadCubemap(vector<const GLchar*> faces)
 	return textureID;
 }
 
+										"textSun.jpg", 
+										"textEarth.jpg", 
+										"textMercury.jpg", 
+										"textMars.jpg", 
+										"textVenus.jpg", 
+										"textJupiter.jpg", 
+										"textSaturn.jpg", 
+										"textNeptun.jpg", 
+										"textUran.jpg"
 void showText(GLuint texture, GLuint VAO, Shader* textShader)
 {
-	if (keys[GLFW_KEY_Q])
-	{
-		glBindTexture(GL_TEXTURE_2D, texture);
+	auto drawText = [&](int index) {
+		glBindTexture(GL_TEXTURE_2D, textTextures[index]);
 
 		// Activate shader
 		textShader->use();
@@ -367,7 +391,25 @@ void showText(GLuint texture, GLuint VAO, Shader* textShader)
 		glBindVertexArray(VAO);
 		glDrawElements(GL_TRIANGLES, 6, GL_UNSIGNED_INT, 0);
 		glBindVertexArray(0);
-	}
+	};
+	if (keys[GLFW_KEY_Q])
+		drawText(0);
+	else if (keys[GLFW_KEY_E])
+		drawText(1);
+	else if (keys[GLFW_KEY_R])
+		drawText(2);
+	else if (keys[GLFW_KEY_Z])
+		drawText(3);
+	else if (keys[GLFW_KEY_F])
+		drawText(4);
+	else if (keys[GLFW_KEY_X])
+		drawText(5);
+	else if (keys[GLFW_KEY_C])
+		drawText(6);
+	else if (keys[GLFW_KEY_V])
+		drawText(7);
+	else if (keys[GLFW_KEY_B])
+		drawText(8);
 }
 // Moves/alters the camera positions based on user input
 void Do_Movement()
