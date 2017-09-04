@@ -1,5 +1,5 @@
 <p align = "center">
-![Demo](https://github.com/ImmersiveS/solar-system/raw/master/resources/solar-system.gif)
+![Demo](https://github.com/slobachev/solar-system/raw/master/resources/solar-system.gif)
 <p>
 ## Description
 
