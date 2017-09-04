@@ -1,5 +1,5 @@
 <p align = "center">
-![alt text](https://github.com/slobachev/solar-system/raw/master/resources/solar-system.gif)
+![](https://github.com/slobachev/solar-system/raw/master/resources/solar-system.gif)
 <p>
 ## Description
 
