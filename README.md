@@ -6,14 +6,14 @@
 
 ## Description
 
-  This is my implementation of solar system done within the coursework on the subject "3D graphics". It has written in C++ using OpenGL API and auxiliary libraries like GLEW, GLFW, GLM, ASSIMP, etc.
+  This is my implementation of a solar system, developed as part of the coursework for the subject "3D Graphics". It is written in C++ using the OpenGL API and auxiliary libraries such as GLEW, GLFW, GLM, ASSIMP, etc.
 
 ## Functionality
 - Rendering of 3D space
-- Space objects loading
+- Loading of space objects
 - Free movement and inspection
 - Zooming
-- Posibility to read information about objects
+- Ability to read information about objects
   
 ## License
 [MIT License](https://opensource.org/licenses/MIT).
